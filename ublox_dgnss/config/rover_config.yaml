@@ -1,0 +1,9 @@
+brt8d:
+  ublox_rover:
+    ros__parameters:
+      DEVICE_SERIAL_STRING: "" # empty to skip serial string check
+      VENDOR_ID: 0x1546
+      PRODUCT_ID: 0x01aa # 0x01aa for rover
+
+      FRAME_ID: "rover"
+      topic_prefix: "/sensors"

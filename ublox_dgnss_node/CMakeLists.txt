@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(ublox_dgnss_node)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)

@@ -139,11 +139,16 @@ public:
     check_for_device_serial_param(parameters_client);
     // check for frame_id parameter
     check_for_frame_id_param(parameters_client);
+    // check for vendor_id parameter
+    check_for_vendor_id_param(parameters_client);
+    // check for product_id parameter
+    check_for_product_id_param(parameters_client);
 
     // check that the CFG parameters are valid that have been supplied as args/yaml
     std::vector<std::string> prefixes;
     auto list_param_result = list_parameters(prefixes, 1);
     for (auto name : list_param_result.names) {
+      /// ?????
       // check for specified serial number string, silently skip over it - already handled above
       if (strcmp(name.c_str(), DEV_STRING_PARAM_NAME.c_str()) == 0) {
         continue;
@@ -152,6 +157,7 @@ public:
       if (strcmp(name.c_str(), FRAME_ID_PARAM_NAME.c_str()) == 0) {
         continue;
       }
+
       // ignore other parameters that don't start with "CFG"
       if (strncmp(name.c_str(), "CFG", 3) != 0) {
         continue;
@@ -175,64 +181,66 @@ public:
     auto qos = rclcpp::SensorDataQoS();
     rclcpp::PublisherOptions pub_options;
     pub_options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
+    std::string topic_prefix = get_parameter_or("topic_prefix", std::string());
+    std::string full_topic_prefix = topic_prefix + "/" + frame_id_ + "/";
 
-    ubx_nav_clock_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavClock>(
+    ubx_nav_clock_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavClock>(full_topic_prefix +
       "ubx_nav_clock", qos, pub_options);
-    ubx_nav_cov_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavCov>(
+    ubx_nav_cov_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavCov>(full_topic_prefix +
       "ubx_nav_cov", qos, pub_options);
-    ubx_nav_dop_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavDOP>(
+    ubx_nav_dop_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavDOP>(full_topic_prefix +
       "ubx_nav_dop", qos, pub_options);
-    ubx_nav_eoe_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavEOE>(
+    ubx_nav_eoe_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavEOE>(full_topic_prefix +
       "ubx_nav_eoe", qos, pub_options);
-    ubx_nav_hp_pos_ecef_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavHPPosECEF>(
+    ubx_nav_hp_pos_ecef_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavHPPosECEF>(full_topic_prefix +
       "ubx_nav_hp_pos_ecef", qos, pub_options);
-    ubx_nav_hp_pos_llh_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavHPPosLLH>(
+    ubx_nav_hp_pos_llh_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavHPPosLLH>(full_topic_prefix +
       "ubx_nav_hp_pos_llh", qos, pub_options);
-    ubx_nav_odo_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavOdo>(
+    ubx_nav_odo_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavOdo>(full_topic_prefix +
       "ubx_nav_odo", qos, pub_options);
-    ubx_nav_orb_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavOrb>(
+    ubx_nav_orb_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavOrb>(full_topic_prefix +
       "ubx_nav_orb", qos, pub_options);
-    ubx_nav_sat_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavSat>(
+    ubx_nav_sat_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavSat>(full_topic_prefix +
       "ubx_nav_sat", qos, pub_options);
-    ubx_nav_sig_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavSig>(
+    ubx_nav_sig_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavSig>(full_topic_prefix +
       "ubx_nav_sig", qos, pub_options);
-    ubx_nav_pos_ecef_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavPosECEF>(
+    ubx_nav_pos_ecef_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavPosECEF>(full_topic_prefix +
       "ubx_nav_pos_ecef", qos, pub_options);
-    ubx_nav_pos_llh_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavPosLLH>(
+    ubx_nav_pos_llh_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavPosLLH>(full_topic_prefix +
       "ubx_nav_pos_llh", qos, pub_options);
-    ubx_nav_pvt_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavPVT>(
+    ubx_nav_pvt_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavPVT>(full_topic_prefix +
       "ubx_nav_pvt", qos, pub_options);
-    ubx_nav_rel_pos_ned_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavRelPosNED>(
+    ubx_nav_rel_pos_ned_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavRelPosNED>(full_topic_prefix +
       "ubx_nav_rel_pos_ned", qos, pub_options);
-    ubx_nav_status_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavStatus>(
+    ubx_nav_status_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavStatus>(full_topic_prefix +
       "ubx_nav_status", qos, pub_options);
-    ubx_nav_time_utc_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavTimeUTC>(
+    ubx_nav_time_utc_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavTimeUTC>(full_topic_prefix +
       "ubx_nav_time_utc", qos, pub_options);
-    ubx_nav_vel_ecef_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavVelECEF>(
+    ubx_nav_vel_ecef_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavVelECEF>(full_topic_prefix +
       "ubx_nav_vel_ecef", qos, pub_options);
-    ubx_nav_vel_ned_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavVelNED>(
+    ubx_nav_vel_ned_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavVelNED>(full_topic_prefix +
       "ubx_nav_vel_ned", qos, pub_options);
-    ubx_rxm_cor_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmCor>(
+    ubx_rxm_cor_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmCor>(full_topic_prefix +
       "ubx_rxm_cor", qos, pub_options);
-    ubx_rxm_rtcm_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>(
+    ubx_rxm_rtcm_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>(full_topic_prefix +
       "ubx_rxm_rtcm", qos, pub_options);
-    ubx_rxm_measx_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmMeasx>(
+    ubx_rxm_measx_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmMeasx>(full_topic_prefix +
       "ubx_rxm_measx", qos, pub_options);
-    ubx_rxm_rawx_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmRawx>(
+    ubx_rxm_rawx_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmRawx>(full_topic_prefix +
       "ubx_rxm_rawx", qos, pub_options);
-    ubx_rxm_spartn_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSpartn>(
+    ubx_rxm_spartn_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSpartn>(full_topic_prefix +
       "ubx_rxm_spartn", qos, pub_options);
-    ubx_rxm_spartnkey_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSpartnKey>(
+    ubx_rxm_spartnkey_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmSpartnKey>(full_topic_prefix +
       "ubx_rxm_spartnkey", qos, pub_options);
-    ubx_esf_status_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfStatus>(
+    ubx_esf_status_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfStatus>(full_topic_prefix +
       "ubx_esf_status", qos, pub_options);
-    ubx_esf_meas_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfMeas>(
+    ubx_esf_meas_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfMeas>(full_topic_prefix +
       "ubx_esf_meas", qos, pub_options);
-    ubx_mon_comms_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXMonComms>(
+    ubx_mon_comms_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXMonComms>(full_topic_prefix +
       "ubx_mon_comms", qos, pub_options);
-    ubx_sec_sig_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXSecSig>(
+    ubx_sec_sig_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXSecSig>(full_topic_prefix +
       "ubx_sec_sig", qos, pub_options);
-    ubx_sec_sig_log_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXSecSigLog>(
+    ubx_sec_sig_log_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXSecSigLog>(full_topic_prefix +
       "ubx_sec_sig_log", qos, pub_options);
 
     // ros2 parameter call backs
@@ -265,7 +273,7 @@ public:
       node_name + "/reset_odo", std::bind(&UbloxDGNSSNode::reset_odo_callback, this, _1, _2));
 
     try {
-      usbc_ = std::make_shared<usb::Connection>(F9_VENDOR_ID, F9_PRODUCT_ID, serial_str_);
+      usbc_ = std::make_shared<usb::Connection>(vendor_id_, product_id_, serial_str_);
       usbc_->set_in_callback(connection_in_callback);
       usbc_->set_out_callback(connection_out_callback);
       usbc_->set_exception_callback(connection_exception_callback);
@@ -314,7 +322,7 @@ public:
 
     ubx_queue_.clear();
     ubx_timer_ = create_wall_timer(
-      10ms, std::bind(&UbloxDGNSSNode::ubx_timer_callback, this),
+      1ms, std::bind(&UbloxDGNSSNode::ubx_timer_callback, this),
       callback_group_ubx_timer_);
 
     ubx_cfg_ = std::make_shared<ubx::cfg::UbxCfg>(usbc_);
@@ -354,7 +362,7 @@ public:
       };
 
     handle_usb_events_timer_ = create_wall_timer(
-      10ms, handle_usb_events_callback,
+      1ms, handle_usb_events_callback,
       callback_group_usb_events_timer_);
 
     if (!async_initialised_) {
@@ -424,6 +432,12 @@ private:
 
   std::string serial_str_;
   const std::string DEV_STRING_PARAM_NAME = "DEVICE_SERIAL_STRING";
+
+  unsigned vendor_id_ = F9_VENDOR_ID;
+  const std::string VENDOR_ID_PARAM_NAME = "VENDOR_ID";
+
+  unsigned product_id_ = F9_PRODUCT_ID;
+  const std::string PRODUCT_ID_PARAM_NAME = "PRODUCT_ID";
 
   std::string unique_id_;
 
@@ -505,6 +519,45 @@ private:
       FRAME_ID_PARAM_NAME.c_str(), frame_id_.c_str());
   }
 
+  UBLOX_DGNSS_NODE_LOCAL
+  void check_for_vendor_id_param(rclcpp::SyncParametersClient::SharedPtr param_client)
+  {
+    // default to default vendor id
+    vendor_id_ = F9_VENDOR_ID;
+    // Check if the parameter exists
+    if (!param_client->has_parameter(VENDOR_ID_PARAM_NAME)) {
+      RCLCPP_INFO(
+        this->get_logger(), "Parameter %s not found, will use default ublox vendor id: 0x%x.",
+        VENDOR_ID_PARAM_NAME.c_str(), F9_VENDOR_ID);
+      return;
+    }
+
+    // Get the parameter value
+    vendor_id_ = param_client->get_parameter<unsigned>(VENDOR_ID_PARAM_NAME);
+    RCLCPP_INFO(
+      this->get_logger(), "Parameter %s found with value: 0x%x",
+      VENDOR_ID_PARAM_NAME.c_str(), vendor_id_);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void check_for_product_id_param(rclcpp::SyncParametersClient::SharedPtr param_client)
+  {
+    // default to default product id
+    product_id_ = F9_PRODUCT_ID;
+    // Check if the parameter exists
+    if (!param_client->has_parameter(PRODUCT_ID_PARAM_NAME)) {
+      RCLCPP_INFO(
+        this->get_logger(), "Parameter %s not found, will use default ublox product id: 0x%x.",
+        PRODUCT_ID_PARAM_NAME.c_str(), F9_PRODUCT_ID);
+      return;
+    }
+
+    // Get the parameter value
+    product_id_ = param_client->get_parameter<unsigned>(PRODUCT_ID_PARAM_NAME);
+    RCLCPP_INFO(
+      this->get_logger(), "Parameter %s found with value: 0x%x",
+      PRODUCT_ID_PARAM_NAME.c_str(), product_id_);
+  }
 
   UBLOX_DGNSS_NODE_LOCAL
   void log_usbc()
@@ -975,7 +1028,7 @@ public:
             buf[i] = 0;
           }
         }
-        RCLCPP_INFO(get_logger(), "nmea: %s", buf);
+        // RCLCPP_INFO(get_logger(), "nmea: %s", buf);
       } else {
         // UBX starts with 0x65 0x62
         if (len > 2 && buf[0] == ubx::UBX_SYNC_CHAR_1 && buf[1] == ubx::UBX_SYNC_CHAR_2) {
@@ -1110,6 +1163,7 @@ private:
   void ubx_timer_callback()
   {
     // if we dont have anything to do just return
+    /// ???????
     if (ubx_queue_.size() == 0) {
       return;
     }
