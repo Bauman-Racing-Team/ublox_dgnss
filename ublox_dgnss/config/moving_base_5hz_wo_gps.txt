@@ -1,0 +1,40 @@
+# Config changes format version 1.0
+# created by u-center version 24.10 at 17:25:14 on Friday, 15 Nov 2024
+[del]
+[set]
+# Interfaces configuration
+Flash CFG-UART2-BAUDRATE   0xe100               # write value 57600  0xe100        to item id 0x40530001 in layer 2
+Flash CFG-UART2INPROT-UBX  0                    # write value 0                    to item id 0x10750001 in layer 2
+Flash CFG-UART2INPROT-SPARTN 0                    # write value 0                    to item id 0x10750005 in layer 2
+Flash CFG-UART2INPROT-RTCM3X 1                    # write value 1                    to item id 0x10750004 in layer 2
+Flash CFG-UART2OUTPROT-RTCM3X 0                    # write value 0                    to item id 0x10760004 in layer 2
+Flash CFG-UART1-ENABLED    1                    # write value 1                    to item id 0x10520005 in layer 2
+Flash CFG-UART1-BAUDRATE   0x70800              # write value 460800  0x70800      to item id 0x40520001 in layer 2
+Flash CFG-UART1INPROT-UBX  0                    # write value 0                    to item id 0x10730001 in layer 2
+Flash CFG-UART1INPROT-NMEA 0                    # write value 0                    to item id 0x10730002 in layer 2
+Flash CFG-UART1INPROT-RTCM3X 0                    # write value 0                    to item id 0x10730004 in layer 2
+Flash CFG-UART1INPROT-SPARTN 0                    # write value 0                    to item id 0x10730005 in layer 2
+Flash CFG-UART1OUTPROT-UBX 0                    # write value 0                    to item id 0x10740001 in layer 2
+Flash CFG-UART1OUTPROT-NMEA 0                    # write value 0                    to item id 0x10740002 in layer 2
+Flash CFG-UART1OUTPROT-RTCM3X 1                    # write value 1                    to item id 0x10740004 in layer 2
+Flash CFG-I2C-ENABLED      0                    # write value 0                    to item id 0x10510003 in layer 2
+Flash CFG-USB-PRODUCT_ID   0x1ab                # write value 427  0x1ab           to item id 0x3065000b in layer 2
+# Misc configuration
+Flash CFG-NAVSPG-DYNMODEL  4                    # write value 4 - AUTOMOT          to item id 0x20110021 in layer 2
+# Rate configuration
+Flash CFG-RATE-MEAS        0xc8                 # write value 200  0xc8            to item id 0x30210001 in layer 2
+Flash CFG-RATE-TIMEREF     0                    # write value 0 - UTC              to item id 0x20210003 in layer 2
+# Signals configuration
+Flash CFG-SIGNAL-GPS_ENA   0                    # write value 0                    to item id 0x1031001f in layer 2
+Flash CFG-SIGNAL-QZSS_ENA  0                    # write value 0                    to item id 0x10310024 in layer 2
+# Message output configuration
+Flash CFG-MSGOUT-RTCM_3X_TYPE1074_UART1 0x0                  # write value 0  0x0               to item id 0x2091035f i
+Flash CFG-MSGOUT-RTCM_3X_TYPE1084_UART1 0x1                  # write value 1  0x1               to item id 0x20910364 i
+Flash CFG-MSGOUT-RTCM_3X_TYPE1094_UART1 0x1                  # write value 1  0x1               to item id 0x20910369 i
+Flash CFG-MSGOUT-RTCM_3X_TYPE1124_UART1 0x1                  # write value 1  0x1               to item id 0x2091036e i
+Flash CFG-MSGOUT-RTCM_3X_TYPE1230_UART1 0x1                  # write value 1  0x1               to item id 0x20910304 i
+Flash CFG-MSGOUT-RTCM_3X_TYPE4072_0_UART1 0x1                  # write value 1  0x1               to item id 0x209102ff
+Flash CFG-MSGOUT-UBX_NAV_PVT_USB 0x1                  # write value 1  0x1               to item id 0x20910009 in layer
+Flash CFG-MSGOUT-UBX_NAV_RELPOSNED_USB 0x1                  # write value 1  0x1               to item id 0x20910090 in
+# Survey in mode configuration
+Flash CFG-TMODE-MODE       0                    # write value 0 - DISABLED         to item id 0x20030001 in layer 2
