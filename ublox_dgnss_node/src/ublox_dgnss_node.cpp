@@ -49,6 +49,7 @@
 #include "ublox_ubx_msgs/msg/ubx_nav_pvt.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_rel_pos_ned.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_status.hpp"
+#include "ublox_ubx_msgs/msg/ubx_nav_svin.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_time_utc.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_vel_ecef.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_vel_ned.hpp"
@@ -90,6 +91,12 @@ struct ubx_queue_frame_t
   std::shared_ptr<ubx::Frame> ubx_frame;
   FrameType frame_type;
 };
+struct rtcm_queue_frame_t
+{
+  rclcpp::Time ts;
+  std::vector<uint8_t> buf;
+  FrameType frame_type;
+};
 
 enum ParamStatus
 {
@@ -118,6 +125,8 @@ public:
   {
     RCLCPP_INFO(this->get_logger(), "starting %s", get_name());
 
+    callback_group_rtcm_timer_ =
+      create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     callback_group_ubx_timer_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     callback_group_usb_events_timer_ = create_callback_group(
       rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -214,6 +223,8 @@ public:
       "ubx_nav_rel_pos_ned", qos, pub_options);
     ubx_nav_status_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavStatus>(full_topic_prefix +
       "ubx_nav_status", qos, pub_options);
+    ubx_nav_svin_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavSvin>(full_topic_prefix +
+      "ubx_nav_svin", qos, pub_options);
     ubx_nav_time_utc_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavTimeUTC>(full_topic_prefix +
       "ubx_nav_time_utc", qos, pub_options);
     ubx_nav_vel_ecef_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXNavVelECEF>(full_topic_prefix +
@@ -242,6 +253,8 @@ public:
       "ubx_sec_sig", qos, pub_options);
     ubx_sec_sig_log_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXSecSigLog>(full_topic_prefix +
       "ubx_sec_sig_log", qos, pub_options);
+    rtcm_pub_ = this->create_publisher<rtcm_msgs::msg::Message>(full_topic_prefix +
+      "rtcm", 10);
 
     // ros2 parameter call backs
     parameters_callback_handle_ =
@@ -324,6 +337,10 @@ public:
     ubx_timer_ = create_wall_timer(
       1ms, std::bind(&UbloxDGNSSNode::ubx_timer_callback, this),
       callback_group_ubx_timer_);
+    rtcm_queue_.clear();
+    rtcm_timer_ = create_wall_timer(
+      10ms, std::bind(&UbloxDGNSSNode::rtcm_timer_callback, this),
+      callback_group_rtcm_timer_);
 
     ubx_cfg_ = std::make_shared<ubx::cfg::UbxCfg>(usbc_);
     ubx_cfg_->cfg_val_set_cfgdata_clear();
@@ -402,6 +419,7 @@ private:
 
   rclcpp::CallbackGroup::SharedPtr callback_group_usb_events_timer_;
   rclcpp::CallbackGroup::SharedPtr callback_group_ubx_timer_;
+  rclcpp::CallbackGroup::SharedPtr callback_group_rtcm_timer_;
 
   std::shared_ptr<usb::Connection> usbc_;
   std::shared_ptr<ubx::cfg::UbxCfg> ubx_cfg_;
@@ -420,8 +438,11 @@ private:
 // so put them in a queue, with a timestamp to be processed later
   std::deque<ubx_queue_frame_t> ubx_queue_;
   std::mutex ubx_queue_mutex_;
+  std::deque<rtcm_queue_frame_t> rtcm_queue_;
+  std::mutex rtcm_queue_mutex_;
 
   rclcpp::TimerBase::SharedPtr ubx_timer_;
+  rclcpp::TimerBase::SharedPtr rtcm_timer_;
 
   bool async_initialised_;
 
@@ -456,6 +477,7 @@ private:
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavPVT>::SharedPtr ubx_nav_pvt_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavRelPosNED>::SharedPtr ubx_nav_rel_pos_ned_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavStatus>::SharedPtr ubx_nav_status_pub_;
+  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavSvin>::SharedPtr ubx_nav_svin_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavTimeUTC>::SharedPtr ubx_nav_time_utc_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavVelECEF>::SharedPtr ubx_nav_vel_ecef_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavVelNED>::SharedPtr ubx_nav_vel_ned_pub_;
@@ -470,6 +492,7 @@ private:
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXMonComms>::SharedPtr ubx_mon_comms_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXSecSig>::SharedPtr ubx_sec_sig_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXSecSigLog>::SharedPtr ubx_sec_sig_log_pub_;
+  rclcpp::Publisher<rtcm_msgs::msg::Message>::SharedPtr rtcm_pub_;
 
   rclcpp::Subscription<ublox_ubx_msgs::msg::UBXEsfMeas>::SharedPtr ubx_esf_meas_sub_;
   rclcpp::Subscription<rtcm_msgs::msg::Message>::SharedPtr rtcm_sub_;
@@ -1042,6 +1065,20 @@ public:
             const std::lock_guard<std::mutex> lock(ubx_queue_mutex_);
             ubx_queue_.push_back(queue_frame);
           }
+
+          // RTCM3 messages start with a 0xD3 for preamble, followed by 0x00
+        } else {
+          if (len > 2 && buf[0] == 0xD3 && buf[1] == 0x00) {
+            std::vector<uint8_t> frame_buf;
+            frame_buf.reserve(len);
+            frame_buf.resize(len);
+            memcpy(frame_buf.data(), &buf[0], len);
+            rtcm_queue_frame_t queue_frame {ts, frame_buf, FrameType::frame_in};
+            {
+              const std::lock_guard<std::mutex> lock(rtcm_queue_mutex_);
+              rtcm_queue_.push_back(queue_frame);
+            }
+          }
         }
 
         std::ostringstream os;
@@ -1193,6 +1230,62 @@ private:
         ubx_queue_.pop_front();
       }
     }
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void rtcm_timer_callback()
+  {
+    // if we dont have anything to do just return
+    if (rtcm_queue_.size() == 0) {
+      return;
+    }
+
+    while (rtcm_queue_.size() > 0) {
+      try {
+        rtcm_queue_frame_t f = rtcm_queue_[0];
+        switch (f.frame_type) {
+          case FrameType::frame_in:
+            rtcm_queue_frame_in(&f);
+            break;
+          case FrameType::frame_out:
+            RCLCPP_WARN(
+              get_logger(),
+              "Received an rtcm_queue_frame_t with frame_type as frame_out - doing nothing");
+            break;
+          default:
+            RCLCPP_ERROR(
+              get_logger(), "Unknown rtcm_queue frame_type: %d - doing nothing", f.frame_type);
+        }
+      } catch (const std::exception & e) {
+        RCLCPP_ERROR(get_logger(), "rtcm_queue_ exception: %s", e.what());
+      }
+
+      {
+        const std::lock_guard<std::mutex> lock(rtcm_queue_mutex_);
+        rtcm_queue_.pop_front();
+      }
+    }
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void rtcm_queue_frame_in(rtcm_queue_frame_t * f)
+  {
+    std::ostringstream oss;
+    for (auto b : f->buf) {
+      oss << std::hex << std::setfill('0') << std::setw(2) << +b;
+    }
+    RCLCPP_DEBUG(get_logger(), "rtcm message payload - 0x%s", oss.str().c_str());
+    auto msg = std::make_unique<rtcm_msgs::msg::Message>();
+
+    // Populate the header
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+
+    // Populate fields
+    msg->message = f->buf;
+
+    // Publish the message
+    rtcm_pub_->publish(*msg);
   }
 
   UBLOX_DGNSS_NODE_LOCAL
@@ -1819,6 +1912,9 @@ private:
       case ubx::UBX_NAV_STATUS:
         ubx_nav_status_pub(f, ubx_nav_->status()->payload());
         break;
+      case ubx::UBX_NAV_SVIN:
+        ubx_nav_svin_pub(f, ubx_nav_->svin()->payload());
+        break;
       case ubx::UBX_NAV_TIMEUTC:
         ubx_nav_time_utc_pub(f, ubx_nav_->timeutc()->payload());
         break;
@@ -2412,6 +2508,36 @@ private:
     msg->msss = payload->msss;
 
     ubx_nav_status_pub_->publish(*msg);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_nav_svin_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::nav::svin::NavSvinPayload> payload)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "ubx class: 0x%02x id: 0x%02x nav svin payload - %s",
+      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
+      payload->to_string().c_str());
+
+    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXNavSvin>();
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+    msg->version = payload->version;
+    msg->itow = payload->iTOW;
+    msg->dur = payload->dur;
+    msg->mean_x = payload->meanX;
+    msg->mean_y = payload->meanY;
+    msg->mean_z = payload->meanZ;
+    msg->mean_x_hp = payload->meanXHP;
+    msg->mean_y_hp = payload->meanYHP;
+    msg->mean_z_hp = payload->meanZHP;
+    msg->mean_acc = payload->meanAcc;
+    msg->obs = payload->obs;
+    msg->valid = payload->valid;
+    msg->active = payload->active;
+
+    ubx_nav_svin_pub_->publish(*msg);
   }
 
   UBLOX_DGNSS_NODE_LOCAL
