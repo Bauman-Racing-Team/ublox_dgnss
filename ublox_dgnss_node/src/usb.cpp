@@ -33,6 +33,7 @@ Connection::Connection(int vendor_id, int product_id, std::string serial_str, in
   class_id_ = LIBUSB_HOTPLUG_MATCH_ANY;
   log_level_ = log_level;
   ctx_ = NULL;
+  dev_ = nullptr;
   devh_ = NULL;
   timeout_ms_ = 45;
   timeout_tv_ = {1, 0};       // default the timeout to 1 seconds
@@ -51,7 +52,7 @@ void Connection::init()
   }
 
   // setup C style to C++ style callback
-  hotplug_attach_callback_t<int(libusb_context * ctx, libusb_device * device,
+  hotplug_attach_callback_t<int(libusb_context * ctx, libusb_device * device,  
     libusb_hotplug_event event, void * user_data)>::func = std::bind<int>(
     &Connection::hotplug_attach_callback, this, _1, _2, _3, _4);
   libusb_hotplug_callback_fn hotplug_attach_callback_fn =
@@ -94,7 +95,7 @@ libusb_device_handle * Connection::open_device_with_serial_string(
   libusb_context * ctx,
   int vendor_id, int product_id,
   std::string serial_str,
-  char * serial_num_string)
+  std::string serial_num_string)
 {
   libusb_device_handle * devHandle = nullptr;
   int rc = 0;
@@ -130,11 +131,12 @@ libusb_device_handle * Connection::open_device_with_serial_string(
       throw std::string("Error opening device: ") + libusb_error_name(rc);
     }
 
-
     // Read the serial number string
+    const size_t serial_buf_size = 256;
+    unsigned char serial_buf[serial_buf_size] = { '\0', };
     rc = libusb_get_string_descriptor_ascii(
       devHandle, desc.iSerialNumber,
-      reinterpret_cast<unsigned char *>(serial_num_string), sizeof(serial_num_string));
+      serial_buf, serial_buf_size - 1);
     if (rc < 0 && rc != LIBUSB_ERROR_INVALID_PARAM) {
       throw std::string("Error getting string descriptor ascii: ") + libusb_error_name(rc);
     }
@@ -144,12 +146,13 @@ libusb_device_handle * Connection::open_device_with_serial_string(
       break;
     }
 
-    if (sizeof(serial_num_string) >= 0) {
-      if (serial_str == serial_num_string) {
-        // Device found and matched
-        break;
-      }
+    serial_num_string = std::string(reinterpret_cast<char *>(serial_buf));
+
+    if (serial_str == serial_num_string) {
+      // Device found and matched
+      break;
     }
+
     // Close the device if it didn't match
     libusb_close(devHandle);
     devHandle = nullptr;
@@ -163,7 +166,7 @@ libusb_device_handle * Connection::open_device_with_serial_string(
 
 bool Connection::open_device()
 {
-  char serial_num_string[256];
+  std::string serial_num_string;
   devh_ = open_device_with_serial_string(
     ctx_, vendor_id_, product_id_, serial_str_,
     serial_num_string);
@@ -208,7 +211,7 @@ bool Connection::open_device()
   struct libusb_device_descriptor dev_desc;
   rc = libusb_get_device_descriptor(dev_, &dev_desc);
   if (rc < 0) {
-    throw std::string("Error getting device descriptor: ") + *libusb_error_name(rc);
+    throw std::string("Error getting device descriptor: ") + libusb_error_name(rc);
   }
   auto num_configurations = dev_desc.bNumConfigurations;       // this should be 1
   if (num_configurations != 1) {

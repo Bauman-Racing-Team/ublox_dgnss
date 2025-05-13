@@ -9,7 +9,7 @@ find_package(ublox_dgnss_node REQUIRED)
 find_package(ublox_nav_sat_fix_hp_node REQUIRED)
 
 install(
-  DIRECTORY launch 
+  DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
 )
 

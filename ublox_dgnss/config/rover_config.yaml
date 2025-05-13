@@ -1,0 +1,65 @@
+ublox_rover:
+  ros__parameters:
+    DEVICE_SERIAL_STRING: "" # empty to skip serial string check
+    VENDOR_ID: 0x1546
+    PRODUCT_ID: 0x01aa # 0x01aa for rover
+
+    FRAME_ID: "rover"
+    topic_prefix: "/sensors"
+
+    # Interfaces configuration
+    CFG_UART1_ENABLED: true                    # write value 1                    to item id 0x10520005 in layer 2
+    CFG_UART1_BAUDRATE: 0x70800              # write value 460800  0x70800      to item id 0x40520001 in layer 2
+    CFG_UART1INPROT_UBX: false                    # write value 0                    to item id 0x10730001 in layer 2
+    CFG_UART1INPROT_NMEA: false                    # write value 0                    to item id 0x10730002 in layer 2
+    CFG_UART1INPROT_RTCM3X: true                    # write value 1                    to item id 0x10730004 in layer 2
+    CFG_UART1INPROT_SPARTN: true                    # write value 1                    to item id 0x10730005 in layer 2
+    CFG_UART1OUTPROT_UBX: false                    # write value 0                    to item id 0x10740001 in layer 2
+    CFG_UART1OUTPROT_NMEA: false                    # write value 0                    to item id 0x10740002 in layer 2
+    CFG_UART1OUTPROT_RTCM3X: false                    # write value 0                    to item id 0x10740004 in layer 2
+    CFG_UART2_BAUDRATE: 0x2580               # write value 9600  0x2580         to item id 0x40530001 in layer 2
+    CFG_UART2_ENABLED: true                    # write value 1                    to item id 0x10530005 in layer 2
+    CFG_UART2INPROT_UBX: false                    # write value 0                    to item id 0x10750001 in layer 2
+    CFG_UART2INPROT_NMEA: false                    # write value 0                    to item id 0x10750002 in layer 2
+    CFG_UART2INPROT_RTCM3X: false                    # write value 0                    to item id 0x10750004 in layer 2
+    CFG_UART2INPROT_SPARTN: false                    # write value 0                    to item id 0x10750005 in layer 2
+    CFG_UART2OUTPROT_NMEA: true                    # write value 1                    to item id 0x10760002 in layer 2
+    CFG_UART2OUTPROT_UBX: false                    # write value 0                    to item id 0x10760001 in layer 2
+    CFG_UART2OUTPROT_RTCM3X: false                    # write value 0                    to item id 0x10760004 in layer 2
+    CFG_I2C_ENABLED: false                    # write value 0                    to item id 0x10510003 in layer 2
+    # CFG_USB_PRODUCT_ID: 0x1aa                # write value 426  0x1aa           to item id 0x3065000b in layer 2  <-- configure manually
+    # Misc configuration
+    CFG_NAVSPG_DYNMODEL: 4                    # write value 4 - AUTOMOT          to item id 0x20110021 in layer 2
+    # Rate configuration
+    CFG_RATE_MEAS: 0xc8                 # write value 200  0xc8            to item id 0x30210001 in layer 2
+    CFG_RATE_TIMEREF: 0                    # write value 0 - UTC              to item id 0x20210003 in layer 2
+    # Signals configuration
+    CFG_SIGNAL_GPS_ENA: false                    # write value 0                    to item id 0x1031001f in layer 2
+    CFG_SIGNAL_QZSS_ENA: false                    # write value 0                    to item id 0x10310024 in layer 2
+    # Message output configuration
+    CFG_MSGOUT_RTCM_3X_TYPE1074_UART1: 0x0                  # write value 0  0x0               to item id 0x2091035f i
+    CFG_MSGOUT_RTCM_3X_TYPE1084_UART1: 0x1                  # write value 1  0x1               to item id 0x20910364 i
+    CFG_MSGOUT_RTCM_3X_TYPE1094_UART1: 0x1                  # write value 1  0x1               to item id 0x20910369 i
+    CFG_MSGOUT_RTCM_3X_TYPE1124_UART1: 0x1                  # write value 1  0x1               to item id 0x2091036e i
+    CFG_MSGOUT_RTCM_3X_TYPE1230_UART1: 0x1                  # write value 1  0x1               to item id 0x20910304 i
+    CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART1: 0x1                  # write value 1  0x1               to item id 0x209102ff
+    CFG_MSGOUT_NMEA_ID_GGA_UART2: 0x0                  # write value 0  0x0               to item id 0x209100bc in lay
+    CFG_MSGOUT_NMEA_ID_GLL_UART2: 0x0                  # write value 0  0x0               to item id 0x209100cb in lay
+    CFG_MSGOUT_NMEA_ID_GSA_UART2: 0x0                  # write value 0  0x0               to item id 0x209100c1 in lay
+    CFG_MSGOUT_NMEA_ID_GSV_UART2: 0x0                  # write value 0  0x0               to item id 0x209100c6 in lay
+    CFG_MSGOUT_NMEA_ID_VTG_UART2: 0x0                  # write value 0  0x0               to item id 0x209100b2 in lay
+    CFG_MSGOUT_NMEA_ID_RMC_UART2: 0x5                  # CHANGE WITH NAV RATE write value 5  0x5               to item id 0x209100ad in lay
+    CFG_MSGOUT_UBX_NAV_PVT_USB: 0x1                  # write value 1  0x1               to item id 0x20910009 in layer
+    CFG_MSGOUT_UBX_NAV_RELPOSNED_USB: 0x1                  # write value 1  0x1               to item id 0x20910090 in
+    # Survey in mode configuration
+    CFG_TMODE_MODE: 0                    # write value 0 - DISABLED         to item id 0x20030001 in layer 2
+    # Timepulse configuration
+    CFG_TP_PULSE_DEF:     0                    # write value 0 - PERIOD           to item id 0x20050023 in layer 2
+    CFG_TP_PULSE_LENGTH_DEF: 1                    # write value 1 - LENGTH           to item id 0x20050030 in layer 2
+    CFG_TP_PERIOD_TP1:    0xf4240              # write value 1000000  0xf4240     to item id 0x40050002 in layer 2
+    CFG_TP_PERIOD_LOCK_TP1: 0xf4240              # write value 1000000  0xf4240     to item id 0x40050003 in layer 2
+    CFG_TP_LEN_TP1:       0x186a0              # write value 100000  0x186a0      to item id 0x40050004 in layer 2
+    CFG_TP_LEN_LOCK_TP1:  0x186a0              # write value 100000  0x186a0      to item id 0x40050005 in layer 2
+    CFG_TP_USER_DELAY_TP1: 0x0                  # write value 0  0x0               to item id 0x40050006 in layer 2
+    CFG_TP_TIMEGRID_TP1:  0                    # write value 0 - UTC              to item id 0x2005000c in layer 2
+    CFG_TP_POL_TP1: true
