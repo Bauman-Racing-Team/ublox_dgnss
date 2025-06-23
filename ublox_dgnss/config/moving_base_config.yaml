@@ -8,7 +8,7 @@ ublox_moving_base:
     topic_prefix: "/sensors"
 
     # Interfaces configuration
-    CFG_UART1_ENABLED: false                    # write value 1                    to item id 0x10520005 in layer 2
+    CFG_UART1_ENABLED: true                    # write value 1                    to item id 0x10520005 in layer 2
     CFG_UART1_BAUDRATE:   0x70800              # write value 460800  0x70800      to item id 0x40520001 in layer 2
     CFG_UART1INPROT_UBX: false                    # write value 0                    to item id 0x10730001 in layer 2
     CFG_UART1INPROT_NMEA: false                    # write value 0                    to item id 0x10730002 in layer 2

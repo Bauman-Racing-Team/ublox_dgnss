@@ -38,11 +38,11 @@ ublox_rover:
     CFG_SIGNAL_QZSS_ENA: false                    # write value 0                    to item id 0x10310024 in layer 2
     # Message output configuration
     CFG_MSGOUT_RTCM_3X_TYPE1074_UART1: 0x0                  # write value 0  0x0               to item id 0x2091035f i
-    CFG_MSGOUT_RTCM_3X_TYPE1084_UART1: 0x1                  # write value 1  0x1               to item id 0x20910364 i
-    CFG_MSGOUT_RTCM_3X_TYPE1094_UART1: 0x1                  # write value 1  0x1               to item id 0x20910369 i
-    CFG_MSGOUT_RTCM_3X_TYPE1124_UART1: 0x1                  # write value 1  0x1               to item id 0x2091036e i
-    CFG_MSGOUT_RTCM_3X_TYPE1230_UART1: 0x1                  # write value 1  0x1               to item id 0x20910304 i
-    CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART1: 0x1                  # write value 1  0x1               to item id 0x209102ff
+    CFG_MSGOUT_RTCM_3X_TYPE1084_UART1: 0x0                  # write value 1  0x1               to item id 0x20910364 i
+    CFG_MSGOUT_RTCM_3X_TYPE1094_UART1: 0x0                  # write value 1  0x1               to item id 0x20910369 i
+    CFG_MSGOUT_RTCM_3X_TYPE1124_UART1: 0x0                  # write value 1  0x1               to item id 0x2091036e i
+    CFG_MSGOUT_RTCM_3X_TYPE1230_UART1: 0x0                  # write value 1  0x1               to item id 0x20910304 i
+    CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART1: 0x0                  # write value 1  0x1               to item id 0x209102ff
     CFG_MSGOUT_NMEA_ID_GGA_UART2: 0x0                  # write value 0  0x0               to item id 0x209100bc in lay
     CFG_MSGOUT_NMEA_ID_GLL_UART2: 0x0                  # write value 0  0x0               to item id 0x209100cb in lay
     CFG_MSGOUT_NMEA_ID_GSA_UART2: 0x0                  # write value 0  0x0               to item id 0x209100c1 in lay
@@ -62,4 +62,4 @@ ublox_rover:
     CFG_TP_LEN_LOCK_TP1:  0x186a0              # write value 100000  0x186a0      to item id 0x40050005 in layer 2
     CFG_TP_USER_DELAY_TP1: 0x0                  # write value 0  0x0               to item id 0x40050006 in layer 2
     CFG_TP_TIMEGRID_TP1:  0                    # write value 0 - UTC              to item id 0x2005000c in layer 2
-    CFG_TP_POL_TP1: true
+    CFG_TP_POL_TP1: true                      # write value 1                    to item id 0x1005000b in layer 2
